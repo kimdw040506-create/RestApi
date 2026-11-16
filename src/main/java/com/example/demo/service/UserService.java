@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.UserRequest;
 import com.example.demo.model.User;
 
 import java.util.List;
@@ -10,9 +11,9 @@ public interface UserService {
 
     User findById(long id);
 
-    User save(User user);
+    User create(UserRequest request);
 
-    void update(User user);
+    User update(long id,UserRequest request);
 
     void delete(long id);
 }
