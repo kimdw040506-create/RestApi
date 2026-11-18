@@ -8,11 +8,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-public class RoleServiceIpml implements RoleService {
+public class RoleServiceImpl implements RoleService {
 
     public RoleRepository roleRepository;
 
-    public RoleServiceIpml(RoleRepository roleRepository) {
+    public RoleServiceImpl(RoleRepository roleRepository) {
         this.roleRepository = roleRepository;
     }
 
