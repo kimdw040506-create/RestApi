@@ -49,7 +49,7 @@ public class UserRestController {
             @Valid @RequestBody UserRequest request) {
         User updated = userService.update(id, request);
 
-        return ResponseEntity.ok(UserResponse.from(updated)git );
+        return ResponseEntity.ok(UserResponse.from(updated));
     }
 
     @DeleteMapping("/{id}")
