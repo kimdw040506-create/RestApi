@@ -1,17 +1,18 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.UserRequest;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import com.example.demo.exception.UserNotFoundException;
+import com.example.demo.model.Role;
 import com.example.demo.model.User;
+import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.example.demo.model.Role;
-import com.example.demo.repository.RoleRepository;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.List;
 
 
 @Service
@@ -28,9 +29,31 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    private void validateUsername(String username, Long currentUserId) {
+        User userWithSameUsername = userRepository.findByUsername(username).orElse(null);
+        if (userWithSameUsername != null
+                && !userWithSameUsername.getId().equals(currentUserId)) {
+            throw new IllegalArgumentException("Username already exists");
+        }
+    }
+
+    private void validateRoles(Set<Long> roleIds) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            throw new IllegalArgumentException("At least one role is required");
+        }
+    }
+
+    private void fillUsersFields(User user, UserRequest userRequest) {
+        user.setName(userRequest.name());
+        user.setSurname(userRequest.surname());
+        user.setEmail(userRequest.email());
+        user.setUsername(userRequest.username());
+        user.setRoles(findRolesByIds(userRequest.roleIds()));
+    }
+
     @Transactional(readOnly = true)
     @Override
-    public List<User> findAll()  {
+    public List<User> findAll() {
         return userRepository.findAll();
     }
 
@@ -38,7 +61,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findById(long id) {
         return userRepository.findById(id)
-                .orElse(null);
+                .orElseThrow(() -> new UserNotFoundException(id));
     }
 
     private Set<Role> findRolesByIds(Set<Long> roleIds) {
@@ -52,23 +75,16 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public User create(UserRequest request) {
-        if(userRepository.findByUsername(request.username()).isPresent()){
-            throw new IllegalArgumentException("Username already exists");
-        }
-        if(request.password() == null || request.password().isBlank()){
+        validateUsername(request.username(), null);
+        validateRoles(request.roleIds());
+
+        if (request.password() == null || request.password().isBlank()) {
             throw new IllegalArgumentException("Password must not be blank");
-        }
-        if(request.roleIds() == null || request.roleIds().isEmpty()){
-            throw new IllegalArgumentException("At least one role is required");
         }
 
         User user = new User();
-        user.setName(request.name());
-        user.setSurname(request.surname());
-        user.setEmail(request.email());
-        user.setUsername(request.username());
+        fillUsersFields(user, request);
         user.setPassword(passwordEncoder.encode(request.password()));
-        user.setRoles(findRolesByIds(request.roleIds()));
 
         return userRepository.save(user);
     }
@@ -76,41 +92,21 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public User update(long id, UserRequest request) {
-        User existingUser = userRepository.findById(id).orElse(null);
+        User existingUser = findById(id);
 
-        if (existingUser == null) {
-            return null;
-        }
-
-        User userWithSameUsername = userRepository
-                .findByUsername(request.username())
-                .orElse(null);
-
-        if (userWithSameUsername != null
-                && !userWithSameUsername.getId().equals(existingUser.getId())) {
-            throw new IllegalArgumentException("Username already exists");
-        }
-
-        if (request.roleIds() == null || request.roleIds().isEmpty()) {
-            throw new IllegalArgumentException("At least one role is required");
-        }
-
-        existingUser.setName(request.name());
-        existingUser.setSurname(request.surname());
-        existingUser.setEmail(request.email());
-        existingUser.setUsername(request.username());
-        existingUser.setRoles(findRolesByIds(request.roleIds()));
+        validateUsername(request.username(), existingUser.getId());
+        validateRoles(request.roleIds());
+        fillUsersFields(existingUser, request);
 
         if (request.password() != null && !request.password().isBlank()) {
             existingUser.setPassword(passwordEncoder.encode(request.password()));
         }
-
         return userRepository.save(existingUser);
     }
 
     @Transactional
     @Override
     public void delete(long id) {
-        userRepository.deleteById(id);
+        userRepository.delete(findById(id));
     }
 }

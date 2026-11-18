@@ -3,6 +3,18 @@ let roles = [];
 let editingUserId = null;
 let deletingUserId = null;
 
+function getCsrfToken() {
+    return document
+        .querySelector('meta[name="_csrf"]')
+        .getAttribute("content");
+}
+
+function getCsrfHeaderName() {
+    return document
+        .querySelector('meta[name="_csrf_header"]')
+        .getAttribute("content");
+}
+
 const userModal = new bootstrap.Modal(
     document.getElementById("user-modal")
 );
@@ -55,38 +67,44 @@ function renderUsers() {
     for (const user of users) {
         const row = document.createElement("tr");
 
-        row.innerHTML = `
-            <td>${user.id}</td>
-            <td>${user.name}</td>
-            <td>${user.surname}</td>
-            <td>${user.email}</td>
-            <td>${user.username}</td>
-            <td>${user.roles.join(", ")}</td>
-            <td>
-                <button class="btn btn-info btn-sm"
-                        data-action="edit"
-                        data-id="${user.id}">
-                    Edit
-                </button>
-            </td>
-            <td>
-                <button class="btn btn-danger btn-sm"
-                        data-action="delete"
-                        data-id="${user.id}">
-                    Delete
-                </button>
-            </td>
-        `;
+        const values = [
+            user.id,
+            user.name,
+            user.surname,
+            user.email,
+            user.username,
+            user.roles.join(", ")
+        ];
 
-        row.querySelector('[data-action="edit"]')
-            .addEventListener("click", function () {
-                openEditModal(user);
-            });
+        for (const value of values) {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.appendChild(cell);
+        }
 
-        row.querySelector('[data-action="delete"]')
-            .addEventListener("click", function () {
-                openDeleteModal(user);
-            });
+        const editCell = document.createElement("td");
+        const editButton = document.createElement("button");
+
+        editButton.textContent = "Edit";
+        editButton.classList.add("btn", "btn-info", "btn-sm");
+        editButton.addEventListener("click", function () {
+            openEditModal(user);
+        });
+
+        editCell.appendChild(editButton);
+        row.appendChild(editCell);
+
+        const deleteCell = document.createElement("td");
+        const deleteButton = document.createElement("button");
+
+        deleteButton.textContent = "Delete";
+        deleteButton.classList.add("btn", "btn-danger", "btn-sm");
+        deleteButton.addEventListener("click", function () {
+            openDeleteModal(user);
+        });
+
+        deleteCell.appendChild(deleteButton);
+        row.appendChild(deleteCell);
 
         tableBody.appendChild(row);
     }
@@ -172,7 +190,8 @@ async function saveUser(event) {
     const response = await fetch(url, {
         method: method,
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            [getCsrfHeaderName()]: getCsrfToken()
         },
         body: JSON.stringify(requestData)
     });
@@ -200,7 +219,10 @@ async function deleteUser() {
     const response = await fetch(
         "/api/admin/users/" + deletingUserId,
         {
-            method: "DELETE"
+            method: "DELETE",
+             headers: {
+                        [getCsrfHeaderName()]: getCsrfToken()
+                        }
         }
     );
 

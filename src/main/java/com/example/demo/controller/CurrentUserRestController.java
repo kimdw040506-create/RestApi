@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class CurrentUserRestControlle {
+public class CurrentUserRestController {
 
     @GetMapping("/api/user")
     public UserResponse getCurrentUser(@AuthenticationPrincipal User user){

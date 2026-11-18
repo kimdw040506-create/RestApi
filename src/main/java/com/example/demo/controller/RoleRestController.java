@@ -15,14 +15,14 @@ public class RoleRestController {
 
     private final RoleRepository roleRepository;
 
-public RoleRestController(RoleRepository roleRepository){
-    this.roleRepository = roleRepository;
-}
+    public RoleRestController(RoleRepository roleRepository) {
+        this.roleRepository = roleRepository;
+    }
 
-@GetMapping
-     public List<RoleResponse> getRoles() {
-    return roleRepository.findAll().stream()
-            .map(RoleResponse ::from)
-            .toList();
-}
+    @GetMapping
+    public List<RoleResponse> getRoles() {
+        return roleRepository.findAll().stream()
+                .map(RoleResponse::from)
+                .toList();
+    }
 }

@@ -37,26 +37,13 @@
                     <th>Role</th>
                 </tr>
                 </thead>
-                <tbody>
-                <tr>
-                    <td th:text="${user.id}"></td>
-                    <td th:text="${user.name}"></td>
-                    <td th:text="${user.surname}"></td>
-                    <td th:text="${user.email}"></td>
-                    <td th:text="${user.username}"></td>
-                    <td>
-                        <span th:each="role, status : ${user.roles}">
-                            <span th:text="${role.name}"></span>
-                            <span th:if="${!status.last}">, </span>
-                        </span>
-                    </td>
-                </tr>
-                </tbody>
+                <tbody id="user-table-body"></tbody>
             </table>
         </div>
     </div>
         </div>
     </div>
 </div>
+<script src="/user.js"></script>
 </body>
 </html>
